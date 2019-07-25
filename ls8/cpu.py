@@ -12,11 +12,13 @@ class CPU:
         self.pc = 0
         self.sp = 0xF4 
         self.branchTable = {}
-        self.branchTable[0b10000010] = self.LDI 
-        self.branchTable[0b01000111] = self.PRN 
-        self.branchTable[0b00000001] = self.HLT 
-        self.branchtable[0b01000101] = self.handleStackPush
-        self.branchtable[0b01000110] = self.handleStackPop
+        self.branchTable[0b10000010] = self.handleLDI 
+        self.branchTable[0b01000111] = self.handlePRN 
+        self.branchTable[0b00000001] = self.handleHLT 
+        self.branchTable[0b01000101] = self.handleStackPush
+        self.branchTable[0b01000110] = self.handleStackPop
+        self.branchTable[0b01010000] = self.handleCall
+        self.branchTable[0b00010001] = self.handleRet
 
     def load(self, fileName):
         """Load a program into memory."""
@@ -43,13 +45,13 @@ class CPU:
         MUL = 0b10100010
         DIV = 0b10100011
         if op == "ADD":
-            self.reg[reg_a] += self.reg[reg_b]
+            self.register[reg_a] += self.register[reg_b]
         elif op == "SUB":
-            self.reg[reg_a] -= self.reg[reg_b]
+            self.register[reg_a] -= self.register[reg_b]
         elif op == "MUL":
-            self.reg[reg_a] *= self.reg[reg_b]
+            self.register[reg_a] *= self.register[reg_b]
         elif op == "DIV":
-            self.reg[reg_a] /= self.reg[reg_b]
+            self.register[reg_a] /= self.register[reg_b]
         
         else:
             raise Exception("Unsupported ALU operation")
@@ -70,7 +72,7 @@ class CPU:
         ), end='')
 
         for i in range(8):
-            print(" %02X" % self.reg[i], end='')
+            print(" %02X" % self.register[i], end='')
 
         print()
 
@@ -85,44 +87,40 @@ class CPU:
         sys.exit()
 
     def handleLDI(self, op1, op2):
-        self.reg[op1] = op2
+        self.register[op1] = op2
 
     def handlePRN(self, op1):
-        print(self.reg[op1])
+        print(self.register[op1])
 
     def handleStackPush(self, op1):
         self.sp -= 1
-        reg_value = self.reg[op1]
+        reg_value = self.register[op1]
         self.ram[self.sp] = reg_value
 
     def handleStackPop(self, op1):
         ram_value = self.ram[self.sp]
-        self.reg[op1] = ram_value
+        self.register[op1] = ram_value
         self.sp += 1
 
     def run(self):
         """Run the CPU."""
-        # self.register = [0] * 8
-        # self.ram[00000000] * 256
-        # self.pc = 0
         running = True
-
 
         while running:
             IR = self.ram[self.pc]
             
             op1 = self.ram_read(self.pc + 1)
             op2 = self.ram_read(self.pc + 2)
-            instruction = (IR >> 6)
-            alu_number = (IR >> 5)
+            instruction = (IR & 0b11000000) >> 6
+            alu_number = (IR & 0b00100000) >> 5
             if alu_number:
                 self.alu(IR, op1, op2)
             elif instruction == 2:
-                self.branchtable[IR](op1, op2)
+                self.branchTable[IR](op1, op2)
             elif instruction == 1:
-                self.branchtable[IR](op1)
+                self.branchTable[IR](op1)
             elif instruction == 0:
-                self.branchtable[IR]()
+                self.branchTable[IR]()
             else:
                 if IR == HLT:
                     running = False
