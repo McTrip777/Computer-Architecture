@@ -53,20 +53,20 @@ class CPU:
         DIV = 0b10100011
         CMP = 0b10100111
         if op == ADD:
-            self.reg[reg_a] += self.reg[reg_b]
+            self.register[reg_a] += self.register[reg_b]
         elif op == SUB:
-            self.reg[reg_a] -= self.reg[reg_b]
+            self.register[reg_a] -= self.register[reg_b]
         elif op == MUL:
-            self.reg[reg_a] *= self.reg[reg_b]
+            self.register[reg_a] *= self.register[reg_b]
         elif op == DIV:
             if not self.reg[reg_b]:
                 print("Error: You are not allowed to divide a number by 0.")
                 sys.exit()
-            self.reg[reg_a] /= self.reg[reg_b]
+            self.register[reg_a] /= self.register[reg_b]
         elif op == CMP:
-            if reg_a > reg_b:
+            if self.register[reg_a] > self.register[reg_b]:
                 self.fl = 0b00000010
-            elif reg_a < reg_b:
+            elif self.register[reg_a] < self.register[reg_b]:
                 self.fl = 0b00000100
             else:
                 self.fl = 0b00000001
@@ -114,8 +114,7 @@ class CPU:
         self.pc += 3
  
     def handlePRN(self, op1):
-        print("PRN",self.register[op1])
- 
+        print(self.register[op1])
         self.pc += 2
  
     def handleStackPush(self, op1):
@@ -137,20 +136,33 @@ class CPU:
         return_address = self.pc + 2
         self.sp -= 1
         self.ram[self.sp] = return_address
- 
         register_num = self.ram[self.pc + 1]
         subroutine_address = self.register[register_num]
- 
         self.pc = subroutine_address
         # print("Call", subroutine_address)
  
     def handleRET(self):
         return_address = self.ram[self.sp]
- 
         self.pc = return_address
         # print("RET", return_address)
  
-   
+    def handleJMP(self, op1):
+        self.pc = self.register[op1]
+        # print("JMP", self.pc)
+ 
+    def handleJEQ(self, op1):
+        if self.fl == 0b00000001:
+            self.pc = self.register[op1]
+        else:
+            self.pc += 2
+        # print("JEQ", self.pc)
+ 
+    def handleJNE(self, op1):
+        if (self.fl & 0b00000001) == 0b00000000:
+            self.pc = self.register[op1]
+        else:
+            self.pc += 2
+        # print("JNE", self.pc)
 
     def run(self):
         """Run the CPU."""
