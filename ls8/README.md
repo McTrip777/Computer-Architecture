@@ -477,3 +477,10 @@ Doing this correctly requires implementing `CMP`, and some comparative forms of
 Hint: Look in the `asm/` directory and learn how to use the `asm.js` assembler.
 This way you can write your code in assembly language and use the assembler to
 build it to machine code and then run it on your emulator.
+
+
+
+
+### code functionality 
+
+- In the constructor I assign all of my functions, almost like a switch statement. So whichever binary number is selected thats the function that gets run. I added the CMP checking if value_a is > < or = value_b. I then set the flag based on the result. Whenever JMP is called it jumps(no condition). Whenever JNE is called it jumps if it is not equal. Whenever JEQ is called it jumps if it is equal. If JEQ or JNE are called and there condition isn't met it is skipped over and runs the next command.
